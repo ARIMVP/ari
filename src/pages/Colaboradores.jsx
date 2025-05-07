@@ -1,6 +1,12 @@
 import { useState, useEffect } from 'react';
 import { db } from '../firebase';
-import { collection, addDoc, getDocs } from 'firebase/firestore';
+import {
+  collection,
+  addDoc,
+  onSnapshot,
+  query,
+  orderBy
+} from 'firebase/firestore';
 
 export default function Colaboradores() {
   const [formulario, setFormulario] = useState({
@@ -15,14 +21,14 @@ export default function Colaboradores() {
   const [filtro, setFiltro] = useState('todos');
 
   useEffect(() => {
-    obtenerColaboradores();
+    // 🔥 Escuchar en tiempo real
+    const q = query(collection(db, 'colaboradores'), orderBy('nombre'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setColaboradores(data);
+    });
+    return () => unsubscribe();
   }, []);
-
-  const obtenerColaboradores = async () => {
-    const querySnapshot = await getDocs(collection(db, 'colaboradores'));
-    const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    setColaboradores(data);
-  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -37,8 +43,10 @@ export default function Colaboradores() {
       fechaRegistro: new Date().toISOString()
     };
     await addDoc(collection(db, 'colaboradores'), nuevoColaborador);
-    setFormulario({ nombre: '', email: '', rol: '', tecnologias: '', estado: 'banca', cliente: '' });
-    obtenerColaboradores();
+    setFormulario({
+      nombre: '', email: '', rol: '', tecnologias: '',
+      estado: 'banca', cliente: ''
+    });
   };
 
   const filtrados = colaboradores.filter(c =>
