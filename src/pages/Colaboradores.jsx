@@ -1,77 +1,97 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
-const Colaboradores = () => {
-  const [colaboradores, setColaboradores] = useState([]);
-  const [nuevoNombre, setNuevoNombre] = useState("");
-  const [nuevoCV, setNuevoCV] = useState("");
+const Colaboradores = ({ colaboradores, setColaboradores }) => {
+  const [nombre, setNombre] = useState('');
+  const [cv, setCV] = useState('');
+  const [estado, setEstado] = useState('En banca');
+  const [rol, setRol] = useState('');
+  const [ubicacion, setUbicacion] = useState('');
+  const [skills, setSkills] = useState('');
 
   const agregarColaborador = () => {
-    if (!nuevoNombre.trim() || !nuevoCV.trim()) return;
-
+    if (!nombre || !cv) return;
     const nuevo = {
-      nombre: nuevoNombre.trim(),
-      cv: nuevoCV.trim(),
+      id: Date.now(),
+      nombre,
+      cv,
+      estado,
+      rol,
+      ubicacion,
+      skills: skills.split(',').map(s => s.trim()),
     };
-
     setColaboradores([...colaboradores, nuevo]);
-    setNuevoNombre("");
-    setNuevoCV("");
-  };
-
-  const eliminarColaborador = (index) => {
-    const actualizados = colaboradores.filter((_, i) => i !== index);
-    setColaboradores(actualizados);
+    setNombre('');
+    setCV('');
+    setEstado('En banca');
+    setRol('');
+    setUbicacion('');
+    setSkills('');
   };
 
   return (
     <div className="p-6">
-      <h2 className="text-xl font-bold mb-4">Gestión de Colaboradores</h2>
-
-      <div className="mb-4">
+      <h2 className="text-2xl font-bold mb-4">Gestión de Colaboradores</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <input
-          type="text"
+          className="border p-2 rounded"
           placeholder="Nombre del colaborador"
-          value={nuevoNombre}
-          onChange={(e) => setNuevoNombre(e.target.value)}
-          className="border p-2 mr-2 w-64 rounded"
+          value={nombre}
+          onChange={e => setNombre(e.target.value)}
         />
         <textarea
+          className="border p-2 rounded"
           placeholder="CV del colaborador"
-          value={nuevoCV}
-          onChange={(e) => setNuevoCV(e.target.value)}
-          className="border p-2 mr-2 w-64 h-24 align-top rounded"
+          value={cv}
+          onChange={e => setCV(e.target.value)}
         />
-        <button
-          onClick={agregarColaborador}
-          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+        <select
+          className="border p-2 rounded"
+          value={estado}
+          onChange={e => setEstado(e.target.value)}
         >
-          Agregar
-        </button>
+          <option>En banca</option>
+          <option>En proyecto</option>
+          <option>De vacaciones</option>
+        </select>
+        <input
+          className="border p-2 rounded"
+          placeholder="Rol actual"
+          value={rol}
+          onChange={e => setRol(e.target.value)}
+        />
+        <input
+          className="border p-2 rounded"
+          placeholder="Ubicación"
+          value={ubicacion}
+          onChange={e => setUbicacion(e.target.value)}
+        />
+        <input
+          className="border p-2 rounded"
+          placeholder="Skills principales (separadas por coma)"
+          value={skills}
+          onChange={e => setSkills(e.target.value)}
+        />
       </div>
+      <button
+        className="bg-green-600 text-white px-4 py-2 rounded"
+        onClick={agregarColaborador}
+      >
+        Agregar
+      </button>
 
-      {colaboradores.length === 0 ? (
-        <p className="text-gray-500">No hay colaboradores registrados.</p>
-      ) : (
-        <ul className="space-y-2">
-          {colaboradores.map((colab, index) => (
-            <li
-              key={index}
-              className="flex items-start justify-between bg-gray-100 p-3 rounded"
-            >
-              <div>
-                <strong>{colab.nombre}</strong>
-                <p className="text-sm text-gray-700 mt-1">{colab.cv}</p>
-              </div>
-              <button
-                onClick={() => eliminarColaborador(index)}
-                className="ml-4 text-red-500 hover:underline"
-              >
-                Eliminar
-              </button>
+      <ul className="mt-6">
+        {colaboradores.length === 0 ? (
+          <p className="text-gray-600">No hay colaboradores registrados.</p>
+        ) : (
+          colaboradores.map(col => (
+            <li key={col.id} className="border p-4 rounded mb-2">
+              <strong>{col.nombre}</strong> - {col.estado} - {col.rol}<br />
+              Ubicación: {col.ubicacion}<br />
+              Skills: {col.skills.join(', ')}
             </li>
-          ))}
-        </ul>
-      )}
+          ))
+        )}
+      </ul>
     </div>
   );
 };
