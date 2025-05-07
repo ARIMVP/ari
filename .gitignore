@@ -1,0 +1,44 @@
+# Node.js
+node_modules/
+dist/
+.build/
+.cache/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Vite
+.vite/
+
+# dotenv
+.env
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDEs y editores
+.vscode/
+.idea/
+*.sw?
+*.sublime*
+
+# pnpm
+pnpm-lock.yaml
+
+# log y salida temporal
+*.log
+logs
+*.tsbuildinfo
+
+# Tests
+coverage/
+
+# Vercel (si generas archivos locales opcionales)
+.vercel
+
+# Optional: excluir archivos zip u otros temporales
+*.zip
+*.tar
+*.tmp
