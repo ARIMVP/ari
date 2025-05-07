@@ -8,7 +8,7 @@ import Colaboradores from './pages/Colaboradores';
 import Dashboard from './pages/Dashboard';
 
 export default function App() {
-const \[vista, setVista] = useState('comparador');
+const [vista, setVista] = useState('comparador');
 const navigate = useNavigate();
 const { usuario } = useAuth();
 
