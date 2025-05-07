@@ -1,7 +1,9 @@
+// vite.config.js
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
-  base: './', // 👈 Esto es esencial para rutas relativas en producción
+  base: './', // 👈 Esto permite que las rutas funcionen bien en producción/Vercel
   plugins: [react()]
 })
+
