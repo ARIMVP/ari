@@ -5,7 +5,10 @@ import {
   addDoc,
   onSnapshot,
   query,
-  orderBy
+  orderBy,
+  doc,
+  deleteDoc,
+  setDoc
 } from 'firebase/firestore';
 
 export default function Colaboradores() {
@@ -19,9 +22,10 @@ export default function Colaboradores() {
   });
   const [colaboradores, setColaboradores] = useState([]);
   const [filtro, setFiltro] = useState('todos');
+  const [modoEdicion, setModoEdicion] = useState(false);
+  const [idEditando, setIdEditando] = useState(null);
 
   useEffect(() => {
-    // 🔥 Escuchar en tiempo real
     const q = query(collection(db, 'colaboradores'), orderBy('nombre'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -37,26 +41,65 @@ export default function Colaboradores() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const nuevoColaborador = {
+    const colaborador = {
       ...formulario,
       tecnologias: formulario.tecnologias.split(',').map(t => t.trim()),
       fechaRegistro: new Date().toISOString()
     };
-    await addDoc(collection(db, 'colaboradores'), nuevoColaborador);
-    setFormulario({
-      nombre: '', email: '', rol: '', tecnologias: '',
-      estado: 'banca', cliente: ''
-    });
+
+    if (modoEdicion) {
+      try {
+        await setDoc(doc(db, 'colaboradores', idEditando), colaborador);
+        setModoEdicion(false);
+        setIdEditando(null);
+      } catch (error) {
+        console.error('Error al editar colaborador:', error);
+      }
+    } else {
+      await addDoc(collection(db, 'colaboradores'), colaborador);
+    }
+
+    setFormulario({ nombre: '', email: '', rol: '', tecnologias: '', estado: 'banca', cliente: '' });
   };
 
-  const filtrados = colaboradores.filter(c =>
-    filtro === 'todos' ? true : c.estado === filtro
-  );
+  const eliminarColaborador = async (id) => {
+    const confirmacion = window.confirm('¿Estás seguro de que deseas eliminar este colaborador?');
+    if (!confirmacion) return;
+    try {
+      await deleteDoc(doc(db, 'colaboradores', id));
+    } catch (error) {
+      console.error('Error al eliminar colaborador:', error);
+      alert('Ocurrió un error al eliminar el colaborador.');
+    }
+  };
+
+  const cargarParaEditar = (colaborador) => {
+    setFormulario({
+      nombre: colaborador.nombre,
+      email: colaborador.email,
+      rol: colaborador.rol,
+      tecnologias: (colaborador.tecnologias || []).join(', '),
+      estado: colaborador.estado,
+      cliente: colaborador.cliente || ''
+    });
+    setModoEdicion(true);
+    setIdEditando(colaborador.id);
+  };
+
+  const cancelarEdicion = () => {
+    setModoEdicion(false);
+    setIdEditando(null);
+    setFormulario({ nombre: '', email: '', rol: '', tecnologias: '', estado: 'banca', cliente: '' });
+  };
+
+  const filtrados = colaboradores.filter(c => filtro === 'todos' ? true : c.estado === filtro);
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       <form onSubmit={handleSubmit} className="space-y-4 bg-white p-4 rounded shadow">
-        <h2 className="text-xl font-bold">Registrar nuevo colaborador</h2>
+        <h2 className="text-xl font-bold">
+          {modoEdicion ? 'Editar colaborador' : 'Registrar nuevo colaborador'}
+        </h2>
 
         <input type="text" name="nombre" placeholder="Nombre completo"
           className="w-full border p-2 rounded" value={formulario.nombre} onChange={handleChange} required />
@@ -80,9 +123,17 @@ export default function Colaboradores() {
         <input type="text" name="cliente" placeholder="Cliente actual (opcional)"
           className="w-full border p-2 rounded" value={formulario.cliente} onChange={handleChange} />
 
-        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-          Guardar colaborador
-        </button>
+        <div className="flex gap-2">
+          <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+            {modoEdicion ? 'Actualizar' : 'Guardar'}
+          </button>
+          {modoEdicion && (
+            <button type="button" onClick={cancelarEdicion}
+              className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500">
+              Cancelar
+            </button>
+          )}
+        </div>
       </form>
 
       <div className="bg-white p-4 rounded shadow">
@@ -106,6 +157,7 @@ export default function Colaboradores() {
               <th className="border px-2 py-1">Estado</th>
               <th className="border px-2 py-1">Tecnologías</th>
               <th className="border px-2 py-1">Cliente</th>
+              <th className="border px-2 py-1">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -116,6 +168,20 @@ export default function Colaboradores() {
                 <td className="border px-2 py-1">{c.estado}</td>
                 <td className="border px-2 py-1">{c.tecnologias?.join(', ')}</td>
                 <td className="border px-2 py-1">{c.cliente || '-'}</td>
+                <td className="border px-2 py-1 space-x-2 text-center">
+                  <button
+                    onClick={() => cargarParaEditar(c)}
+                    className="text-blue-600 hover:underline"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    onClick={() => eliminarColaborador(c.id)}
+                    className="text-red-600 hover:underline"
+                  >
+                    Eliminar
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
